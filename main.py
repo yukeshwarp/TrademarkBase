@@ -7,8 +7,8 @@ import pandas as pd
 import streamlit as st
 from azure.cosmos import CosmosClient
 import os
-import time
 from io import BytesIO
+
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -289,8 +289,11 @@ if pdf_file is not None:
     if not text:
         st.error("Failed to extract text from the uploaded PDF. Please check the file.")
     else:
+        # Store the extracted text in a variable for further use
+        extracted_text = text  # Store text for use in further processing
+
         # Extract trademark details
-        extracted_data = extract_all_details(text)
+        extracted_data = extract_all_details(extracted_text)
 
         st.subheader("Extracted Details:")
         if extracted_data:
