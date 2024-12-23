@@ -8,7 +8,7 @@ import streamlit as st
 from azure.cosmos import CosmosClient
 import os
 import time
-
+from io import BytesIO
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -272,31 +272,40 @@ Determine:
 
     return "Error: Max retries reached without success."
 
-
-# Streamlit UI layout
+# Title and description
 st.title("Trademark Data Extractor and Conflict Assessor")
 st.write("Upload a PDF to extract details and assess trademark conflicts.")
 
+# File uploader
 pdf_file = st.file_uploader("Choose a PDF file", type="pdf")
+
 if pdf_file is not None:
-    text, num_pages = extract_text_from_pdf(pdf_file)
+    # Read PDF directly from stream
+    pdf_bytes = pdf_file.read()
+    pdf_stream = BytesIO(pdf_bytes)
+    
+    # Extract text and number of pages
+    text, num_pages = extract_text_from_pdf(pdf_stream)
     st.write(f"Number of Pages: {num_pages}")
 
     if not text:
         st.error("Failed to extract text from the uploaded PDF. Please check the file.")
     else:
+        # Extract trademark details
         extracted_data = extract_all_details(text)
 
         st.subheader("Extracted Details:")
         if extracted_data:
             st.dataframe(pd.DataFrame(extracted_data))
 
+            # Button to assess conflicts
             if st.button("Assess Conflict with Azure LLM"):
+                results = assess_conflict_parallel(extracted_data)
+                st.write(f"Total API calls made: {api_call_counter}")
                 for record in extracted_data:
-                    assessment_result = assess_conflict_with_llm(record)
-                    st.subheader(
-                        f"Assessment for Application {record['Application_Number']}"
-                    )
-                    st.markdown(assessment_result)
+                    app_num = record["Application_Number"]
+                    st.subheader(f"Assessment for Application {app_num}")
+                    st.markdown(results.get(app_num, "No result available"))
         else:
             st.write("No details found in the uploaded document.")
+
