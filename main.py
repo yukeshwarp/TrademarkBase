@@ -272,7 +272,6 @@ Determine:
 
     return "Error: Max retries reached without success."
 
-# Title and description
 st.title("Trademark Data Extractor and Conflict Assessor")
 st.write("Upload a PDF to extract details and assess trademark conflicts.")
 
@@ -280,9 +279,8 @@ st.write("Upload a PDF to extract details and assess trademark conflicts.")
 pdf_file = st.file_uploader("Choose a PDF file", type="pdf")
 
 if pdf_file is not None:
-    # Read PDF directly from stream
-    pdf_bytes = pdf_file.read()
-    pdf_stream = BytesIO(pdf_bytes)
+    # Store PDF directly in memory
+    pdf_stream = BytesIO(pdf_file.getvalue())
     
     # Extract text and number of pages
     text, num_pages = extract_text_from_pdf(pdf_stream)
@@ -308,4 +306,3 @@ if pdf_file is not None:
                     st.markdown(results.get(app_num, "No result available"))
         else:
             st.write("No details found in the uploaded document.")
-
